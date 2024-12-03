@@ -1,0 +1,157 @@
+# Demonstration
+
+```{r}
+library(nlrx)
+library(dplyr)
+library(ggplot2)
+library(gridExtra)
+```
+
+```{r}
+netlogopath <- file.path("E:/Program files/NetLogo 6.4.0")
+modelpath <- file.path("model/dairy-vs-transhumance-v1.nlogo")
+outpath <- file.path("output")
+```
+
+```{r}
+nl_single <- nl(nlversion = "6.4.0",
+         nlpath = netlogopath,
+         modelpath = modelpath,
+         jvmmem = 1024)
+```
+
+```{r}
+observer_variables <- c("season", "day", 
+                        "population-size-dairy", 
+                        "population-size-transhumance",
+                        "total-grazing-potential_localMax",
+                        "dairy-pressure-coef",
+                        "transhumance-pressure-coef",
+                        "dairy-hut-count", 
+                        "total-occupation-layers", 
+                        "total-grazing-potential", 
+                        "grazing-land-use",
+                        "grazing-land-use_dairy",
+                        "grazing-land-use_transhumance",
+                        "record_total-grazing-potential", 
+                        "record_grazing-land-use", 
+                        "unsustainable-state",
+                        "unsustainable-dairy-herds",
+                        "unsustainable-transhumance-herds")
+
+default_parameters <- list(
+  "seed" = 123,
+  "type-of-experiment" = "\"user-defined\"",
+  "gui_area-width" = 50, "gui_area-height" = 25,
+  "gui_conflict-avoidance" = "true",
+  "gui_grazing-potential_max" = 250,
+  "gui_herd-size-dairy" = 10,
+  "gui_herd-size-transhumance" = 50,
+  "gui_number-herds-dairy" = 5,
+  "gui_number-herds-transhumance" = 10,
+  "display-mode" = "\"grazing-potential\""
+)
+```
+
+## Single-run experiment
+
+```{r}
+nl_single@experiment <- experiment(expname = "demonstration-single-run",
+                                   outpath = outpath,
+                                   repetition = 1,
+                                   tickmetrics = "true",
+                                   idsetup = "setup",
+                                   idgo = "go",
+                                   idfinal = NA_character_,
+                                   idrunnum = NA_character_,
+                                   runtime = 10^4,
+                                   evalticks = NA_integer_,
+                                   metrics = observer_variables,
+                                   variables = list(),
+                                   constants = default_parameters)
+
+nl_single@simdesign <- simdesign_simple(nl = nl_single,
+                                        nseeds = 1)
+```
+
+```{r}
+eval_variables_constants(nl_single)
+print(nl_single)
+
+results_single <- run_nl_all(nl_single)
+```
+
+Calculate relative metrics:
+```{r}
+total_number_patches <- default_parameters$`gui_area-width` * default_parameters$`gui_area-height`
+results_single <- results_single %>% 
+  mutate(dairy_hut_density_percent = 100 * `dairy-hut-count` / total_number_patches,
+         mean_occupation_layers_per_hut = `total-occupation-layers` / `dairy-hut-count`)
+```
+
+Attach results to nl_single object:
+```{r}
+setsim(nl_single, "simoutput") <- results_single
+```
+
+Write output to outpath:
+```{r}
+write_simoutput(nl_single)
+# or use alternative:
+#readr::write_csv(results_single, file = paste(outpath, "0_demonstration.csv", sep = "/"))
+```
+
+Plot trajectories of metrics:
+```{r}
+plot_name <- paste(outpath, "demonstration_single.png", sep = "/")
+
+png(plot_name, width = 840, height = 540)
+
+color_mapping_grazing <- c("Total grazing potential (% max. potential)" = "darkgreen", 
+                           "Grazing land use (% total patches)" = "black",
+                           "Dairy land use (% total patches)" = "cadetblue",
+                           "Transhumance land use (% total patches)" = "maroon")
+grazing_plot <- ggplot(results_single) +
+  geom_path(aes(x = `[step]`, y = `grazing-land-use`, color = "Grazing land use (% total patches)"), linewidth = 1.2) +
+  geom_area(aes(x = `[step]`, y = `grazing-land-use_transhumance` + `grazing-land-use_dairy`, fill = "Dairy land use (% total patches)"), linewidth = 1.2) +
+  geom_area(aes(x = `[step]`, y = `grazing-land-use_transhumance`, fill = "Transhumance land use (% total patches)"), linewidth = 1.2) +
+  geom_path(aes(x = `[step]`, y = `total-grazing-potential`, color = "Total grazing potential (% max. potential)"), linewidth = 1.2) + 
+  labs(x = "steps", y = "%") +
+  scale_color_manual(name = "", values = color_mapping_grazing) +
+  scale_fill_manual(name = "", values = color_mapping_grazing) +
+  theme(legend.position = "right")
+
+color_mapping_huts <- c("Dairy hut density (% total patches)" = "black", 
+                        "Mean occupation layers per hut" = "darkgrey")
+huts_plot <- ggplot(results_single) +  
+  geom_path(aes(x = `[step]`, y = dairy_hut_density_percent, color = "Dairy hut density (% total patches)"), linewidth = 1.2) +
+  geom_path(aes(x = `[step]`, y = mean_occupation_layers_per_hut, color = "Mean occupation layers per hut"), linewidth = 1.2) +
+  labs(x = "steps", y = "%") +
+  scale_color_manual(name = "", values = color_mapping_huts) +
+  theme(legend.position = "right")
+
+grid.arrange(grazing_plot, huts_plot, nrow = 2)
+
+dev.off()
+```
+
+```{r}
+knitr::include_graphics(plot_name)
+```
+
+
+Sustainability check:
+
+```{r, echo=FALSE}
+value1 <- results_single$`unsustainable-state`[nrow(results_single)]
+value2 <- results_single$`dairy-pressure-coef`
+value3 <- results_single$`transhumance-pressure-coef`
+value4 <- results_single$`unsustainable-dairy-herds` / results_single$`gui_number-herds-dairy`
+value5 <- results_single$`unsustainable-transhumance-herds` / results_single$`gui_number-herds-transhumance`
+```
+
+* `unsustainable-state` = `r value1`
+* `dairy-pressure-coef` = `r value2`
+* `transhumance-pressure-coef` = `r value3`
+* `unsustainable-dairy-herds` (%) = `r value2`
+* `unsustainable-transhumance-herds` (%) = `r value3`
