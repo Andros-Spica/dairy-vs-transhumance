@@ -1,1 +1,2 @@
-# dairy-vs-transhumance
+# Dairy versus Transhumance model
+

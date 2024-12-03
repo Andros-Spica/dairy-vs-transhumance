@@ -1,0 +1,24 @@
+project:
+  type: book
+
+book:
+  title: "Dairy *versus* Transhumance"
+  author: "Andreas Angourakis"
+  date: "`r Sys.Date()`"
+  chapters:
+    - index.qmd
+    - introduction.qmd
+    - demonstration.qmd
+    - sensitivity-analysis.qmd
+    - references.qmd
+
+bibliography: references.bib
+
+format:
+  html:
+    theme: cosmo
+  pdf:
+    documentclass: scrreprt
+
+editor: visual
+
