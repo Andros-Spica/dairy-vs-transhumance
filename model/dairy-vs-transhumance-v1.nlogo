@@ -102,9 +102,6 @@ globals
   grazing-land-use_dairy
   grazing-land-use_transhumance
 
-  grazing-intensity_mean
-  grazing-intensity_sd
-
   unsustainable-state
   unsustainable-dairy-herds
   unsustainable-transhumance-herds
@@ -119,10 +116,9 @@ dairy-herds-own
 [
   ;;; Input: given properties
   head-count
-  current-hut
-  ;;; calculation
   grazing-requirement_day
-  ;;; Output: (final) state
+  ;;; Output: state
+  current-hut
   unsustainable
 ]
 
@@ -130,9 +126,8 @@ transhumance-herds-own
 [
   ;;; Input: given properties
   head-count
-  ;;; calculation
   grazing-requirement_day
-  ;;; Output: (final) state
+  ;;; Output: state
   unsustainable
 ]
 
@@ -140,7 +135,7 @@ huts-own
 [
   ;;; Input: given properties
   owner
-  ;;; Output: (final) state
+  ;;; Output: state
   occupation-layers
 ]
 
@@ -148,12 +143,10 @@ patches-own
 [
   ;;; Input: given properties
   grazing-potential_localmax
-  ;;; calculation
+  ;;; Output: state
   grazing-potential
-  ;;; Output: (final) state
   grazed
   land-use
-  grazing-intensity
 ]
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -643,13 +636,6 @@ to update-observers
   set grazing-land-use_dairy 100 * (count patches with [land-use = "dairy"]) / (count patches)
   set grazing-land-use_transhumance 100 * (count patches with [land-use = "transhumance"]) / (count patches)
 
-  ask patches
-  [
-    set grazing-intensity grazing-potential / grazing-potential_localmax
-  ]
-  set grazing-intensity_mean mean [grazing-intensity] of patches
-  set grazing-intensity_sd standard-deviation [grazing-intensity] of patches
-
   if (season > record_initial-lag and day = 1 and remainder season record_sample-frequency = 1)
   [
     set record_total-grazing-potential lput total-grazing-potential record_total-grazing-potential
@@ -711,23 +697,6 @@ to refresh-view
       ]
     ]
   ]
-
-;  if (display-mode = "hut density")
-;  [
-;    let maxHuts max [count huts] of patches
-;
-;    ask patches
-;    [
-;      let hutsHere count huts-here
-;      ifelse (hutsHere > 0)
-;      [
-;        set pcolor 18 - 6 * (hutsHere / maxHuts)
-;      ]
-;      [
-;        set pcolor white
-;      ]
-;    ]
-;  ]
 
   ask huts
   [
