@@ -75,6 +75,7 @@ globals
   ;;;; auxiliar
 
   ; Calculated directly from parameters and kept constant:
+  patch-count
 
   population-size-dairy
   population-size-transhumance
@@ -268,6 +269,8 @@ to check-par-is-positive [ parName parValue ]
 end
 
 to initialise-observers
+
+  set patch-count count patches
 
   set population-size-dairy sum [head-count] of dairy-herds
   set population-size-transhumance sum [head-count] of transhumance-herds
