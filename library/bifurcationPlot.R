@@ -29,9 +29,10 @@ bifurcationPlotSimple <- function(parameter_values,
          cex.lab = cex * 0.3,
          lwd = cex)
     
-    for (v in 2:ncol(observed_variables))
+    for (v in 1:ncol(observed_variables))
     {
       points(parameter_values, unlist(observed_variables[,v]), type = 'l', col = col[v], lwd = cex)
+      points(parameter_values, unlist(observed_variables[,v]), col = col[v],pch = 1, cex = cex)
     }
     
     legend(legend_position[1],legend_position[2], legend = variable_names, 

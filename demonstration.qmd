@@ -133,6 +133,7 @@ huts_plot <- ggplot(results_single) +
 grid.arrange(grazing_plot, huts_plot, nrow = 2)
 
 dev.off()
+rm(grazing_plot, huts_plot)
 ```
 
 ```{r}

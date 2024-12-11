@@ -1393,7 +1393,7 @@ INPUTBOX
 91
 200
 gui_area-width
-49.0
+50.0
 1
 0
 Number
@@ -1841,6 +1841,54 @@ NetLogo 6.4.0
     </enumeratedValueSet>
     <enumeratedValueSet variable="display-mode">
       <value value="&quot;grazing-potential&quot;"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="herd population experiment" repetitions="1" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>season</metric>
+    <metric>day</metric>
+    <metric>population-size-dairy</metric>
+    <metric>population-size-transhumance</metric>
+    <metric>total-grazing-potential_localMax</metric>
+    <metric>dairy-pressure-coef</metric>
+    <metric>transhumance-pressure-coef</metric>
+    <metric>dairy-hut-count</metric>
+    <metric>total-occupation-layers</metric>
+    <metric>total-grazing-potential</metric>
+    <metric>grazing-land-use</metric>
+    <metric>grazing-land-use_dairy</metric>
+    <metric>grazing-land-use_transhumance</metric>
+    <metric>record_total-grazing-potential</metric>
+    <metric>record_grazing-land-use</metric>
+    <metric>unsustainable-state</metric>
+    <metric>unsustainable-dairy-herds</metric>
+    <metric>unsustainable-transhumance-herds</metric>
+    <steppedValueSet variable="seed" first="0" step="1" last="4"/>
+    <enumeratedValueSet variable="gui_area-width">
+      <value value="49"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="gui_area-height">
+      <value value="24"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="type-of-experiment">
+      <value value="&quot;user-defined&quot;"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="gui_number-herds-dairy" first="2" step="2" last="16"/>
+    <steppedValueSet variable="gui_number-herds-transhumance" first="2" step="2" last="16"/>
+    <steppedValueSet variable="gui_herd-size-dairy" first="5" step="5" last="35"/>
+    <steppedValueSet variable="gui_herd-size-transhumance" first="5" step="5" last="35"/>
+    <enumeratedValueSet variable="gui_grazing-potential_max">
+      <value value="250"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="gui_conflict-avoidance">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="print-messages">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="display-mode">
+      <value value="&quot;grazed&quot;"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>

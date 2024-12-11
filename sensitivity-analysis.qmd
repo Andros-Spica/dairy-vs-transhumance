@@ -3,6 +3,7 @@
 ```{r}
 library(nlrx)
 library(dplyr)
+library(readr)
 library(ggplot2)
 library(gridExtra)
 library(scales)
@@ -157,6 +158,7 @@ land_use_trajectories <- ggplot(results_batch_1, aes(x = `[step]`, group = facto
 grid.arrange(grazing_trajectories, land_use_trajectories, nrow = 2)
 
 dev.off()
+rm(grazing_trajectories, land_use_trajectories)
 ```
 ```{r}
 knitr::include_graphics(plot_name)
@@ -170,17 +172,19 @@ plot_name <- paste(outpath, "sensitivity_batch_1_symmetric_bifurcationPlot.png",
 
 observed_variables <- c("total-grazing-potential",
                         "grazing-land-use_dairy",
-                        "grazing-land-use_transhumance")
+                        "grazing-land-use_transhumance",
+                        "unsustainable-dairy-herds",
+                        "unsustainable-transhumance-herds")
 
 png(plot_name, width = 840, height = 540)
 
 bifurcationPlotSimple(parameter_values = results_batch_1_endstate$`gui_number-herds-dairy`, 
                       observed_variables = results_batch_1_endstate[, observed_variables],
-                      parameter_x_label = "Number of dairy herds",
+                      parameter_x_label = "Number of herds per type",
                       variable_y_label = "%",
                       variable_names = observed_variables,
-                      col = c("darkgreen", "cadetblue", "maroon"),
-                      legend_position = c(6, 98),
+                      col = c("darkgreen", "cadetblue", "maroon", "darkblue", "darkred"),
+                      legend_position = c(1, 75),
                       cex = 5)
 
 dev.off()
@@ -220,20 +224,20 @@ sweep_parameters <- list(
   "gui_number-herds-transhumance" = list(values = 1:10)
 )
 
-expname <- "sensitivity-param-sweep-permutation_ff_2x"
+expname <- "sensitivity-param-sweep-permutation_2x"
 ```
 
 ```{r}
 nl_batch_2@experiment <- experiment(expname = expname,
                                   outpath = outpath,
                                   repetition = 1,
-                                  tickmetrics = "true",
+                                  tickmetrics = "false", # measure only final state
                                   idsetup = "setup",
                                   idgo = "go",
                                   idfinal = NA_character_,
                                   idrunnum = NA_character_,
                                   runtime = 10^4,
-                                  evalticks = NA_integer_,
+                                  #evalticks = NA_integer_,
                                   metrics = observer_variables,
                                   variables = sweep_parameters,
                                   constants = default_parameters)
@@ -277,19 +281,20 @@ write_simoutput(nl_batch_2)
 
 Read output:
 ```{r}
-results_batch_2 <- read.csv(paste0(outpath, "/", expname, ".csv"))
+results_batch_2 <- readr::read_csv(paste0(outpath, "/", expname, "_ff", ".csv"))
 ```
-
 
 Get end states:
 ```{r}
 results_batch_2_endstate <- results_batch_2 %>%
-  group_by(siminputrow) %>%
-  filter(step == max (step)) %>%
-  ungroup()
-
-results_batch_2_endstate <- results_batch_2_endstate %>%
   mutate(parameter_config = paste(gui_number_herds_dairy, gui_number_herds_transhumance, sep = " vs ")) %>%
+  group_by(parameter_config) %>%
+  filter(step == max (step))
+```
+
+Calculate mean values per parameter configuration:
+```{r}
+results_batch_2_endstate <- results_batch_2_endstate %>%
   group_by(parameter_config) %>%
   summarise(
     number_herds_dairy = mean(gui_number_herds_dairy),
@@ -317,8 +322,8 @@ tripleRaster_twoParameters(
   variable_3 = "unsustainable_state_mean",
   parameter_x_label = "Number of dairy herds",
   parameter_y_label = "Number of transhumance herds",
-  variable_1_label = "Unsustainable\ndairy herds (mean)",
-  variable_2_label = "Unsustainable\ntranshumance herds (mean)",
+  variable_1_label = "% unsustainable\ndairy herds (mean)",
+  variable_2_label = "% unsustainable\ntranshumance herds (mean)",
   variable_3_label = "Unsustainable\nend state (mean)",
   plot_scale = 5,
   variable_3_point_number_legend_keys = 3,
@@ -335,104 +340,146 @@ knitr::include_graphics(plot_name)
 rm(nl_batch_2)
 ```
 
-
 ## Parameter sweeps: permutation gradient (4x)
 
 ```{r}
-nl_batch_3 <- nl(nlversion = "6.4.0",
-               nlpath = netlogopath,
-               modelpath = modelpath,
-               jvmmem = 1024)
+# nl_batch_3 <- nl(nlversion = "6.4.0",
+#                nlpath = netlogopath,
+#                modelpath = modelpath,
+#                jvmmem = 1024)
+```
+
+```{r}
+# default_parameters <- list(
+#   "type-of-experiment" = "\"user-defined\"",
+#   "gui_area-width" = 50, "gui_area-height" = 25,
+#   "gui_conflict-avoidance" = "true",
+#   "gui_grazing-potential_max" = 250,
+#   "display-mode" = "\"grazing-potential\""
+# )
+# 
+# sweep_parameters <- list(
+#   "seed" = list(values = 0:5),
+#   "gui_number-herds-dairy" = list(values = seq(from = 2, to = 10, by = 2)),
+#   "gui_number-herds-transhumance" = list(values = seq(from = 2, to = 10, by = 2)),
+#   "gui_herd-size-dairy" = list(values = seq(from = 5, to = 35, by = 10)),
+#   "gui_herd-size-transhumance" = list(values = seq(from = 5, to = 35, by = 10))
+# )
+# 
+# expname <- "sensitivity-param-sweep-permutation_ff_4x"
+```
+
+```{r}
+# nl_batch_3@experiment <- experiment(expname = "sensitivity-param-sweep-permutation",
+#                                   outpath = outpath,
+#                                   repetition = 1,
+#                                   tickmetrics = "true",
+#                                   idsetup = "setup",
+#                                   idgo = "go",
+#                                   idfinal = NA_character_,
+#                                   idrunnum = NA_character_,
+#                                   runtime = 10^4,
+#                                   evalticks = NA_integer_,
+#                                   metrics = observer_variables,
+#                                   variables = sweep_parameters,
+#                                   constants = default_parameters)
+# 
+# nl_batch_3@simdesign <- simdesign_ff(nl = nl_batch_3,
+#                                      nseeds = 1)
+```
+
+```{r}
+# eval_variables_constants(nl_batch_3)
+# print(nl_batch_3)
+# 
+# results_batch_3 <- run_nl_all(nl_batch_3, split = 4)
+```
+
+```{r}
+expname <- "dairy-vs-transhumance-v1 herd population experiment-table"
+
+results_batch_3 <- read.csv(
+  paste0(outpath, "/", expname, ".csv"),
+  skip = 6)
 ```
 
 ```{r}
 default_parameters <- list(
-  "type-of-experiment" = "\"user-defined\"",
-  "gui_area-width" = 50, "gui_area-height" = 25,
-  "gui_conflict-avoidance" = "true",
-  "gui_grazing-potential_max" = 250,
-  "display-mode" = "\"grazing-potential\""
+  "type-of-experiment" = results_batch_3$type.of.experiment[1],
+  "gui_area-width" = results_batch_3$gui_area.width[1],
+  "gui_area-height" = results_batch_3$gui_area.height[1],
+  "gui_conflict-avoidance" = results_batch_3$gui_conflict.avoidance[1],
+  "gui_grazing-potential_max" = results_batch_3$gui_grazing.potential_max[1],
+  "display-mode" = results_batch_3$display.mode[1]
 )
 
 sweep_parameters <- list(
-  "seed" = list(values = 0:5),
-  "gui_number-herds-dairy" = list(values = seq(from = 2, to = 10, by = 2)),
-  "gui_number-herds-transhumance" = list(values = seq(from = 2, to = 10, by = 2)),
-  "gui_herd-size-dairy" = list(values = seq(from = 5, to = 35, by = 10)),
-  "gui_herd-size-transhumance" = list(values = seq(from = 5, to = 35, by = 10))
+  "seed" = unique(results_batch_3$seed),
+  "gui_number-herds-dairy" = unique(results_batch_3$gui_number.herds.dairy),
+  "gui_number-herds-transhumance" = unique(results_batch_3$gui_number.herds.transhumance),
+  "gui_herd-size-dairy" = unique(results_batch_3$gui_herd.size.dairy),
+  "gui_herd-size-transhumance" = unique(results_batch_3$gui_herd.size.transhumance)
 )
-
-expname <- "sensitivity-param-sweep-permutation_ff_4x"
 ```
 
+Attach results to nl_single object:
 ```{r}
-nl_batch_3@experiment <- experiment(expname = "sensitivity-param-sweep-permutation",
-                                  outpath = outpath,
-                                  repetition = 1,
-                                  tickmetrics = "true",
-                                  idsetup = "setup",
-                                  idgo = "go",
-                                  idfinal = NA_character_,
-                                  idrunnum = NA_character_,
-                                  runtime = 10^4,
-                                  evalticks = NA_integer_,
-                                  metrics = observer_variables,
-                                  variables = sweep_parameters,
-                                  constants = default_parameters)
-
-nl_batch_3@simdesign <- simdesign_ff(nl = nl_batch_3,
-                                     nseeds = 1)
+# setsim(nl_batch_3, "simoutput") <- results_batch_3
 ```
 
+Write output to outpath:
 ```{r}
-eval_variables_constants(nl_batch_3)
-print(nl_batch_3)
+# write_simoutput(nl_batch_3)
+```
 
-results_batch_3 <- run_nl_all(nl_batch_3, split = 4)
+Read output:
+```{r}
+# results_batch_3 <- read_csv(paste0(outpath, "/", expname, ".csv"))
+```
+
+Rename run number and step:
+```{r}
+results_batch_3 <- results_batch_3 %>%
+  rename(run_number = X.run.number.) %>%
+  rename(step = X.step.)
 ```
 
 Calculate relative metrics:
 ```{r}
 total_number_patches <- default_parameters$`gui_area-width` * default_parameters$`gui_area-height`
 results_batch_3 <- results_batch_3 %>% 
-  mutate(dairy_hut_density_percent = 100 * `dairy-hut-count` / total_number_patches,
-         mean_occupation_layers_per_hut = `total-occupation-layers` / `dairy-hut-count`)
+  mutate(dairy_hut_density_percent = 100 * dairy.hut.count / total_number_patches,
+         mean_occupation_layers_per_hut = total.occupation.layers / dairy.hut.count)
 ```
 
-Attach results to nl_single object:
-```{r}
-setsim(nl_batch_3, "simoutput") <- results_batch_3
-```
-
-Write output to outpath:
-```{r}
-write_simoutput(nl_batch_3)
-```
-
-Read output:
-```{r}
-results_batch_3 <- read.csv(paste0(outpath, "/", expname, ".csv"))
-```
-
-Get end states:
+Filter out configurations:
 ```{r}
 results_batch_3_endstate <- results_batch_3 %>%
-  group_by(`siminputrow`) %>%
-  filter(`[step]` == max (`[step]`)) %>%
-  summarise(
-    number_herds_dairy = mean(`gui_number-herds-dairy`),
-    number_herds_transhumance = mean(`gui_number-herds-transhumance`),
-    herd_size_dairy = mean(`gui_herd-size-dairy`),
-    herd_size_transhumance = mean(`gui_herd-size-transhumance`),
-    unsustainable_dairy_herds_mean = mean(`unsustainable-dairy-herds`),
-    unsustainable_transhumance_herds_mean = mean(`unsustainable-transhumance-herds`),
-    unsustainable_state_mean = mean(as.numeric(`unsustainable-state`))
-    ) %>%
-  ungroup()
-  
+  mutate(parameter_config = paste0(
+    gui_number.herds.dairy, " x ", gui_herd.size.dairy, " vs ",
+    gui_number.herds.transhumance, " x ", gui_herd.size.transhumance)) %>%
+  filter(gui_number.herds.dairy %in% sweep_parameters$`gui_number-herds-dairy`[1:5]) %>%
+  filter(gui_number.herds.transhumance %in% sweep_parameters$`gui_number-herds-transhumance`[1:5]) %>%
+  filter(gui_herd.size.dairy %in% sweep_parameters$`gui_herd-size-dairy`[1:5]) %>%
+  filter(gui_herd.size.transhumance %in% unique(sweep_parameters$`gui_herd-size-transhumance`[1:5]))
 ```
 
-Plot triple raster (3 variables, 2 parameters):
+Calculate mean values per parameter configuration:
+```{r}
+results_batch_3_endstate <- results_batch_3_endstate %>%
+  group_by(parameter_config) %>%
+  summarise(
+    number_herds_dairy = mean(gui_number.herds.dairy),
+    number_herds_transhumance = mean(gui_number.herds.transhumance),
+    herd_size_dairy = mean(gui_herd.size.dairy),
+    herd_size_transhumance = mean(gui_herd.size.transhumance),
+    unsustainable_dairy_herds_mean = mean(unsustainable.dairy.herds),
+    unsustainable_transhumance_herds_mean = mean(unsustainable.transhumance.herds),
+    unsustainable_state_sum =  mean(ifelse(unsustainable.state == "true", 1, 0))
+    )
+```
+
+Plot triple raster (3 variables, 4 parameters):
 ```{r}
 source("library/tripleRaster_fourParameters.R")
 
@@ -448,15 +495,25 @@ tripleRaster_fourParameters(
   parameter_strip_y = "herd_size_transhumance",
   variable_1 = "unsustainable_dairy_herds_mean",
   variable_2 = "unsustainable_transhumance_herds_mean",
-  variable_3 = "unsustainable_state_mean",
+  variable_3 = "unsustainable_state_sum",
   parameter_x_label = "Number of dairy herds",
   parameter_y_label = "Number of transhumance herds",
-  variable_1_label = "Number of unsustainable herds (dairy)",
-  variable_2_label = "Number of unsustainable herds (transhumance)",
-  variable_3_label = "Unsustainable end state",
+  variable_1_label = "% unsustainable\ndairy herds (mean)",
+  variable_2_label = "% unsustainable\ntranshumance herds (mean)",
+  variable_3_label = "Unsustainable\nend state (mean)",
   plot_scale = 5,
-  variable_3_point_number_legend_keys = 2,
-  variable_3_print_values = FALSE)
+  #variable_3_value_label_size = 0.4,
+  # variable_3_point_size = c(0.2, 1),
+  # axis_title_size = 5, 
+  axis_text_size = 2.5,
+  #strip_parameter_name_max_length = 2,
+  #strip_parameter_name_occlusion_text = "herd size",
+  strip_text_size = 2.5,
+  legend_title_size = 2.5,
+  legend_text_size = 2,
+  variable_3_point_number_legend_keys = 3,
+  variable_3_print_values = FALSE
+  )
 
 dev.off()
 ```
