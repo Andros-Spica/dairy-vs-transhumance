@@ -4,3 +4,5 @@
 .Ruserdata
 
 /.quarto/
+
+output/sensitivity-param-sweep-permutation_2x_ff.csv
