@@ -9,13 +9,13 @@ The motivation for modelling the long-term interaction between transhumance and 
 ```{r}
 #| echo: false
 knitr::kable(
-    read.csv("docs/from-ethno-to-model.csv"),
+    read.csv("documentation/from-ethno-to-model.csv"),
     caption = "From ethnoarchaological sources to model"
 )
 ```
 
 
-![Infographic](docs/behaviour-infographic)
+![Infographic](documentation/behaviour-infographic)
 
 Hypotheses / questions to be explored:
 
