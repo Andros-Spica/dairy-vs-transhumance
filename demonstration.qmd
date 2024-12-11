@@ -1,8 +1,13 @@
 # Demonstration
 
 ```{r}
+#| eval: false
 library(nlrx)
+```
+
+```{r}
 library(dplyr)
+library(readr)
 library(ggplot2)
 library(gridExtra)
 ```
@@ -14,6 +19,7 @@ outpath <- file.path("output")
 ```
 
 ```{r}
+#| eval: false
 nl_single <- nl(nlversion = "6.4.0",
          nlpath = netlogopath,
          modelpath = modelpath,
@@ -51,12 +57,14 @@ default_parameters <- list(
   "gui_number-herds-transhumance" = 10,
   "display-mode" = "\"grazing-potential\""
 )
+expname <- "demonstration-single-run"
 ```
 
 ## Single-run experiment
 
 ```{r}
-nl_single@experiment <- experiment(expname = "demonstration-single-run",
+#| eval: false
+nl_single@experiment <- experiment(expname = expname,
                                    outpath = outpath,
                                    repetition = 1,
                                    tickmetrics = "true",
@@ -75,6 +83,7 @@ nl_single@simdesign <- simdesign_simple(nl = nl_single,
 ```
 
 ```{r}
+#| eval: false
 eval_variables_constants(nl_single)
 print(nl_single)
 
@@ -83,6 +92,7 @@ results_single <- run_nl_all(nl_single)
 
 Calculate relative metrics:
 ```{r}
+#| eval: false
 total_number_patches <- default_parameters$`gui_area-width` * default_parameters$`gui_area-height`
 results_single <- results_single %>% 
   mutate(dairy_hut_density_percent = 100 * `dairy-hut-count` / total_number_patches,
@@ -91,14 +101,21 @@ results_single <- results_single %>%
 
 Attach results to nl_single object:
 ```{r}
+#| eval: false
 setsim(nl_single, "simoutput") <- results_single
 ```
 
 Write output to outpath:
 ```{r}
+#| eval: false
 write_simoutput(nl_single)
 # or use alternative:
 #readr::write_csv(results_single, file = paste(outpath, "0_demonstration.csv", sep = "/"))
+```
+
+Read output:
+```{r}
+results_single <- read_csv(paste0(outpath, "/", expname, "_simple.csv"))
 ```
 
 Plot trajectories of metrics:
@@ -140,19 +157,19 @@ rm(grazing_plot, huts_plot)
 knitr::include_graphics(plot_name)
 ```
 
-
 Sustainability check:
 
 ```{r, echo=FALSE}
-value1 <- results_single$`unsustainable-state`[nrow(results_single)]
-value2 <- results_single$`dairy-pressure-coef`
-value3 <- results_single$`transhumance-pressure-coef`
-value4 <- results_single$`unsustainable-dairy-herds` / results_single$`gui_number-herds-dairy`
-value5 <- results_single$`unsustainable-transhumance-herds` / results_single$`gui_number-herds-transhumance`
+values_to_print <- results_single[nrow(results_single),]
+value1 <- values_to_print$`unsustainable-state`
+value2 <- values_to_print$`dairy-pressure-coef`
+value3 <- values_to_print$`transhumance-pressure-coef`
+value4 <- values_to_print$`unsustainable-dairy-herds`
+value5 <- values_to_print$`unsustainable-transhumance-herds`
 ```
 
 * `unsustainable-state` = `r value1`
 * `dairy-pressure-coef` = `r value2`
 * `transhumance-pressure-coef` = `r value3`
-* `unsustainable-dairy-herds` (%) = `r value2`
-* `unsustainable-transhumance-herds` (%) = `r value3`
+* `unsustainable-dairy-herds` (%) = `r value4`
+* `unsustainable-transhumance-herds` (%) = `r value5`

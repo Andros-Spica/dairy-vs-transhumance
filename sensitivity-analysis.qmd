@@ -1,7 +1,11 @@
 # Sensitivity analysis
 
 ```{r}
+#| eval: false
 library(nlrx)
+```
+
+```{r}
 library(dplyr)
 library(readr)
 library(ggplot2)
@@ -39,6 +43,7 @@ observer_variables <- c("season", "day",
 ## Parameter sweeps: symmetric gradient
 
 ```{r}
+#| eval: false
 nl_batch_1 <- nl(nlversion = "6.4.0",
                nlpath = netlogopath,
                modelpath = modelpath,
@@ -61,28 +66,32 @@ sweep_parameters <- list(
   "gui_number-herds-dairy" = list(values = 1:10),
   "gui_number-herds-transhumance" = list(values = 1:10)
 )
+
+expname <- "sensitivity-param-sweep-symmetric"
 ```
 
 ```{r}
-nl_batch_1@experiment <- experiment(expname = "sensitivity-param-sweep-symmetric",
-                                  outpath = outpath,
-                                  repetition = 1,
-                                  tickmetrics = "true",
-                                  idsetup = "setup",
-                                  idgo = "go",
-                                  idfinal = NA_character_,
-                                  idrunnum = NA_character_,
-                                  runtime = 10^4,
-                                  evalticks = NA_integer_,
-                                  metrics = observer_variables,
-                                  variables = sweep_parameters,
-                                  constants = default_parameters)
+#| eval: false
+nl_batch_1@experiment <- experiment(expname = expname,
+                                    outpath = outpath,
+                                    repetition = 1,
+                                    tickmetrics = "true",
+                                    idsetup = "setup",
+                                    idgo = "go",
+                                    idfinal = NA_character_,
+                                    idrunnum = NA_character_,
+                                    runtime = 10^4,
+                                    evalticks = NA_integer_,
+                                    metrics = observer_variables,
+                                    variables = sweep_parameters,
+                                    constants = default_parameters)
 
 nl_batch_1@simdesign <- simdesign_distinct(nl = nl_batch_1,
-                                         nseeds = 1)
+                                           nseeds = 1)
 ```
 
 ```{r}
+#| eval: false
 eval_variables_constants(nl_batch_1)
 print(nl_batch_1)
 
@@ -91,6 +100,7 @@ results_batch_1 <- run_nl_all(nl_batch_1)
 
 Calculate relative metrics:
 ```{r}
+#| eval: false
 total_number_patches <- default_parameters$`gui_area-width` * default_parameters$`gui_area-height`
 results_batch_1 <- results_batch_1 %>% 
   mutate(dairy_hut_density_percent = 100 * `dairy-hut-count` / total_number_patches,
@@ -99,12 +109,19 @@ results_batch_1 <- results_batch_1 %>%
 
 Attach results to nl_single object:
 ```{r}
+#| eval: false
 setsim(nl_batch_1, "simoutput") <- results_batch_1
 ```
 
 Write output to outpath:
 ```{r}
+#| eval: false
 write_simoutput(nl_batch_1)
+```
+
+Read output:
+```{r}
+results_batch_1 <- read_csv(paste0(outpath, "/", expname, "_distinct.csv"))
 ```
 
 Generate labels for each run:
@@ -195,12 +212,14 @@ knitr::include_graphics(plot_name)
 ```
 
 ```{r}
+#| eval: false
 rm(nl_batch_1)
 ```
 
 ## Parameter sweeps: permutation gradient (2x)
 
 ```{r}
+#| eval: false
 nl_batch_2 <- nl(nlversion = "6.4.0",
                nlpath = netlogopath,
                modelpath = modelpath,
@@ -228,6 +247,7 @@ expname <- "sensitivity-param-sweep-permutation_2x"
 ```
 
 ```{r}
+#| eval: false
 nl_batch_2@experiment <- experiment(expname = expname,
                                   outpath = outpath,
                                   repetition = 1,
@@ -247,6 +267,7 @@ nl_batch_2@simdesign <- simdesign_ff(nl = nl_batch_2,
 ```
 
 ```{r}
+#| eval: false
 eval_variables_constants(nl_batch_2)
 print(nl_batch_2)
 
@@ -255,6 +276,7 @@ results_batch_2 <- run_nl_all(nl_batch_2, split = 4)
 
 Simplify names:
 ```{r}
+#| eval: false
 results_batch_2 <- results_batch_2 %>%
   rename_with( ~ gsub("\\-", "_", oldnames)) %>%
   rename_with( ~ gsub("\\[", "", oldnames)) %>%
@@ -263,6 +285,7 @@ results_batch_2 <- results_batch_2 %>%
 
 Calculate relative metrics:
 ```{r}
+#| eval: false
 total_number_patches <- default_parameters$`gui_area-width` * default_parameters$`gui_area-height`
 results_batch_2 <- results_batch_2 %>% 
   mutate(dairy_hut_density_percent = 100 * dairy_hut_count / total_number_patches,
@@ -271,21 +294,25 @@ results_batch_2 <- results_batch_2 %>%
 
 Attach results to nl_single object:
 ```{r}
+#| eval: false
 setsim(nl_batch_2, "simoutput") <- results_batch_2
 ```
 
 Write output to outpath:
 ```{r}
+#| eval: false
 write_simoutput(nl_batch_2)
 ```
 
 Read output:
 ```{r}
+#| eval: false
 results_batch_2 <- readr::read_csv(paste0(outpath, "/", expname, "_ff", ".csv"))
 ```
 
 Get end states:
 ```{r}
+#| eval: false
 results_batch_2_endstate <- results_batch_2 %>%
   mutate(parameter_config = paste(gui_number_herds_dairy, gui_number_herds_transhumance, sep = " vs ")) %>%
   group_by(parameter_config) %>%
@@ -294,6 +321,7 @@ results_batch_2_endstate <- results_batch_2 %>%
 
 Calculate mean values per parameter configuration:
 ```{r}
+#| eval: false
 results_batch_2_endstate <- results_batch_2_endstate %>%
   group_by(parameter_config) %>%
   summarise(
@@ -303,6 +331,21 @@ results_batch_2_endstate <- results_batch_2_endstate %>%
     unsustainable_transhumance_herds_mean = mean(unsustainable_transhumance_herds),
     unsustainable_state_mean = mean(as.numeric(unsustainable_state))
     )
+```
+
+```{r}
+expname_endstates <- paste0(outpath, "/", expname, "_ff_endstates", ".csv")
+```
+
+Write end state dataset to outpath:
+```{r}
+#| eval: false
+write_csv(results_batch_2_endstate, expname_endstates)
+```
+
+Read end state dataset:
+```{r}
+results_batch_2_endstate <- readr::read_csv(expname_endstates)
 ```
 
 Plot triple raster (3 variables, 2 parameters):
@@ -337,63 +380,13 @@ knitr::include_graphics(plot_name)
 ```
 
 ```{r}
+#| eval: false
 rm(nl_batch_2)
 ```
 
 ## Parameter sweeps: permutation gradient (4x)
 
-```{r}
-# nl_batch_3 <- nl(nlversion = "6.4.0",
-#                nlpath = netlogopath,
-#                modelpath = modelpath,
-#                jvmmem = 1024)
-```
-
-```{r}
-# default_parameters <- list(
-#   "type-of-experiment" = "\"user-defined\"",
-#   "gui_area-width" = 50, "gui_area-height" = 25,
-#   "gui_conflict-avoidance" = "true",
-#   "gui_grazing-potential_max" = 250,
-#   "display-mode" = "\"grazing-potential\""
-# )
-# 
-# sweep_parameters <- list(
-#   "seed" = list(values = 0:5),
-#   "gui_number-herds-dairy" = list(values = seq(from = 2, to = 10, by = 2)),
-#   "gui_number-herds-transhumance" = list(values = seq(from = 2, to = 10, by = 2)),
-#   "gui_herd-size-dairy" = list(values = seq(from = 5, to = 35, by = 10)),
-#   "gui_herd-size-transhumance" = list(values = seq(from = 5, to = 35, by = 10))
-# )
-# 
-# expname <- "sensitivity-param-sweep-permutation_ff_4x"
-```
-
-```{r}
-# nl_batch_3@experiment <- experiment(expname = "sensitivity-param-sweep-permutation",
-#                                   outpath = outpath,
-#                                   repetition = 1,
-#                                   tickmetrics = "true",
-#                                   idsetup = "setup",
-#                                   idgo = "go",
-#                                   idfinal = NA_character_,
-#                                   idrunnum = NA_character_,
-#                                   runtime = 10^4,
-#                                   evalticks = NA_integer_,
-#                                   metrics = observer_variables,
-#                                   variables = sweep_parameters,
-#                                   constants = default_parameters)
-# 
-# nl_batch_3@simdesign <- simdesign_ff(nl = nl_batch_3,
-#                                      nseeds = 1)
-```
-
-```{r}
-# eval_variables_constants(nl_batch_3)
-# print(nl_batch_3)
-# 
-# results_batch_3 <- run_nl_all(nl_batch_3, split = 4)
-```
+NOTE: Due to performance issues with `nlrx`, this experiment is performed in NetLogo's Behavior Space.
 
 ```{r}
 expname <- "dairy-vs-transhumance-v1 herd population experiment-table"
@@ -420,21 +413,6 @@ sweep_parameters <- list(
   "gui_herd-size-dairy" = unique(results_batch_3$gui_herd.size.dairy),
   "gui_herd-size-transhumance" = unique(results_batch_3$gui_herd.size.transhumance)
 )
-```
-
-Attach results to nl_single object:
-```{r}
-# setsim(nl_batch_3, "simoutput") <- results_batch_3
-```
-
-Write output to outpath:
-```{r}
-# write_simoutput(nl_batch_3)
-```
-
-Read output:
-```{r}
-# results_batch_3 <- read_csv(paste0(outpath, "/", expname, ".csv"))
 ```
 
 Rename run number and step:
@@ -520,8 +498,4 @@ dev.off()
 
 ```{r}
 knitr::include_graphics(plot_name)
-```
-
-```{r}
-rm(nl_batch_3)
 ```
