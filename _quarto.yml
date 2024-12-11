@@ -5,7 +5,13 @@ project:
 book:
   title: "Dairy *versus* Transhumance"
   author: "Andreas Angourakis"
-  date: "`r Sys.Date()`"
+  date: today
+  date-format: DD MMMM, YYYY
+  search: true
+  repo-url: https://github.com/Andros-Spica/dairy-vs-transhumance/
+  sharing: [twitter, facebook]
+  site-url: https://andros-spica.github.io/dairy-vs-transhumance/
+  page-navigation: true
   chapters:
     - index.qmd
     - introduction.qmd
