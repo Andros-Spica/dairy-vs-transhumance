@@ -1,0 +1,8 @@
+"source","information","model","domain"
+"Carrer, Walsh, Mocci 2020","Dairy-focused cow herders (marghé)\nSheep herders (bergé)","Dairy herds\nTranshumance herds",Agent
+"Carrer, Walsh, Mocci 2020","Summer\nUplands (gias)","Grazing season (days)\nGrazing area (grid of land units)","Global"
+"","The amount and quality of pasture varies within the area","Land units have specific a maximum grazing potential","Land unit"
+"Pasture is consumed by herd animals","Herd animals decrease the grazing potential of land units","Land unit"
+"Grazing requirements vary depending on animal species (body size)\nCows require more than sheep (~4:1)","Grazing depends on a grazing rate, which is larger in dairy than in transhumance herds\n(dairy: 1 vs transhumance: 0.25)","Global"
+"","After grazed, pasture fully recovers in one or two years time","Grazing potential recovery rate","Global"
+"Carrer, Walsh, Mocci 2020","Dry-stone huts (casòt)\nFlat areas not far from water sources\nUsed intermittently","Dairy huts (agents/objects)\nAreas with higher grazing potential (preferential use for dairy)\nHuts surrounded by insufficient potential are abandoned (to be reoccupied later)","Agent"

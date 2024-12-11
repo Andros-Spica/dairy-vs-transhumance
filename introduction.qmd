@@ -6,6 +6,16 @@ The motivation for modelling the long-term interaction between transhumance and 
 
 ## Model overview
 
+```{r}
+knitr::kable(
+    read.csv("docs/from-ethno-to-model.csv"),
+    caption = "From ethnoarchaological sources to model"
+)
+```
+
+
+![Infographic](docs/behaviour-infographic)
+
 Hypotheses / questions to be explored:
 
 -   Under which conditions can both populations co-exist?
